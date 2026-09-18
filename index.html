@@ -142,6 +142,13 @@
     margin-bottom:14px;
   }
   .limit-warning.show{ display:block; }
+  .done-msg{
+    font-size:15px; font-weight:600;
+    color:var(--success); background:var(--success-bg);
+    border:1px solid var(--success); border-radius:6px;
+    padding:10px 14px; margin-bottom:14px;
+  }
+  .done-msg:empty{ display:none; }
 
   /* ── File list ────────────────────────────────────────── */
   #fileList{ list-style:none; margin:0 0 18px; padding:0; }
@@ -309,6 +316,7 @@
   <input type="file" id="fileInput" accept=".csv" multiple hidden />
 
   <ul class="card" id="fileList"></ul>
+  <div class="done-msg" id="doneMsg" role="status" aria-live="polite"></div>
 
   <div class="actions">
     <button class="btn btn-primary" id="processBtn" disabled>Process all files</button>
@@ -599,6 +607,7 @@
   const processBtn = document.getElementById('processBtn');
   const zipBtn = document.getElementById('zipBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const doneMsg = document.getElementById('doneMsg');
 
   function addFiles(fileList){
     const incoming = Array.from(fileList).filter(f => /\.csv$/i.test(f.name));
@@ -637,6 +646,13 @@
     processBtn.disabled = processing || entries.length === 0 || entries.every(e => e.status === 'done');
     zipBtn.disabled = !entries.some(e => e.status === 'done');
     clearBtn.disabled = processing || entries.length === 0;
+    const nDone = entries.filter(e => e.status === 'done').length;
+    const nErr = entries.filter(e => e.status === 'error').length;
+    doneMsg.textContent = (!processing && nDone + nErr > 0 && nDone + nErr === entries.length)
+      ? `✓ Conversion done — ${nDone} of ${entries.length} file${entries.length > 1 ? 's' : ''} ready.`
+        + (nErr ? ` ${nErr} failed (see red rows).` : '')
+        + ' Click the ↓ button next to each file, or "Download all (.zip)".'
+      : '';
 
     fileListEl.innerHTML = entries.map(e => {
       let metaHtml = '';
